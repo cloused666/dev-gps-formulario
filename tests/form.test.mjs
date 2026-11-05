@@ -13,5 +13,7 @@ test('validação rejeita dados de contato inválidos e opção fora da lista', 
   assert.ok(validateField('email', 'sem-email'));
   assert.ok(validateField('age', '150'));
   assert.ok(validateField('platform', 'Outra plataforma'));
+  assert.ok(validateField('name', 'Pessoa\nInjetada'));
+  assert.ok(validateField('email', ['pessoa@example.com']));
   assert.equal(validateField('phone', '+55 11 99999-8888'), '');
 });

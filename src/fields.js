@@ -9,11 +9,12 @@ export const questions = [
 ];
 
 export function validateField(key, value) {
-  const v = String(value ?? '').trim();
+  if (typeof value !== 'string') return 'Preencha este campo para continuar.';
+  const v = value.trim();
   if (!v) return 'Preencha este campo para continuar.';
-  if (key === 'name' && v.length < 2) return 'Digite seu nome completo.';
+  if (key === 'name' && (v.length < 2 || /[\x00-\x1f\x7f]/.test(v))) return 'Digite seu nome completo.';
   if (key === 'phone' && !/^\+?[\d\s()\-]{10,25}$/.test(v)) return 'Digite um WhatsApp válido.';
-  if (key === 'phone' && (v.match(/\d/g) || []).length < 10) return 'Digite um WhatsApp com pelo menos 10 números.';
+  if (key === 'phone' && ((v.match(/\d/g) || []).length < 10 || (v.match(/\d/g) || []).length > 15)) return 'Digite um WhatsApp com 10 a 15 números.';
   if (key === 'email' && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)) return 'Digite um e-mail válido.';
   if (key === 'age' && (!/^\d+$/.test(v) || Number(v) < 1 || Number(v) > 120)) return 'Digite uma idade entre 1 e 120.';
   const q = questions.find(item => item.key === key);
