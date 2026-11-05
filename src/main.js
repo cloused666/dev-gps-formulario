@@ -13,19 +13,19 @@ const esc = value => String(value).replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<
 const save = () => sessionStorage.setItem('devgps-draft', JSON.stringify(answers));
 
 function fieldMarkup(q) {
-  if (q.type === 'select') return `<div class="select-wrap"><select id="answer" name="${q.key}" required aria-describedby="field-hint field-error"><option value="">Selecione uma opção</option>${q.options.map(o => `<option value="${esc(o)}" ${answers[q.key] === o ? 'selected' : ''}>${esc(o)}</option>`).join('')}</select><span class="select-arrow" aria-hidden="true">⌄</span></div>`;
-  if (q.type === 'textarea') return `<textarea id="answer" name="${q.key}" placeholder="${esc(q.placeholder)}" maxlength="${q.maxLength}" required aria-describedby="field-hint field-error">${esc(answers[q.key])}</textarea>`;
-  return `<input id="answer" name="${q.key}" type="${q.type}" value="${esc(answers[q.key])}" placeholder="${esc(q.placeholder)}" ${q.autocomplete ? `autocomplete="${q.autocomplete}"` : ''} ${q.inputmode ? `inputmode="${q.inputmode}"` : ''} ${q.maxLength ? `maxlength="${q.maxLength}"` : ''} ${q.min ? `min="${q.min}" max="${q.max}"` : ''} required aria-describedby="field-hint field-error" />`;
+  if (q.type === 'select') return `<div class="select-wrap"><select id="answer" name="${q.key}" required aria-describedby="field-error"><option value="">Selecione uma opção</option>${q.options.map(o => `<option value="${esc(o)}" ${answers[q.key] === o ? 'selected' : ''}>${esc(o)}</option>`).join('')}</select><span class="select-arrow" aria-hidden="true">⌄</span></div>`;
+  if (q.type === 'textarea') return `<textarea id="answer" name="${q.key}" placeholder="${esc(q.placeholder)}" maxlength="${q.maxLength}" required aria-describedby="field-error">${esc(answers[q.key])}</textarea>`;
+  return `<input id="answer" name="${q.key}" type="${q.type}" value="${esc(answers[q.key])}" placeholder="${esc(q.placeholder)}" ${q.autocomplete ? `autocomplete="${q.autocomplete}"` : ''} ${q.inputmode ? `inputmode="${q.inputmode}"` : ''} ${q.maxLength ? `maxlength="${q.maxLength}"` : ''} ${q.min ? `min="${q.min}" max="${q.max}"` : ''} required aria-describedby="field-error" />`;
 }
 
 function render() {
   const q = questions[step];
   app.innerHTML = `<div class="card-title">FORMULÁRIO DEV GPS</div>
     <div class="progress-meta"><span class="sr-only">Progresso</span><span>${step + 1} / ${questions.length}</span></div>
-    <div class="progress" role="progressbar" aria-label="Progresso do formulário" aria-valuemin="0" aria-valuemax="8" aria-valuenow="${step + 1}"><span style="width:${(step + 1) / questions.length * 100}%"></span></div>
+    <div class="progress" role="progressbar" aria-label="Progresso do formulário" aria-valuemin="0" aria-valuemax="${questions.length}" aria-valuenow="${step + 1}"><span style="width:${(step + 1) / questions.length * 100}%"></span></div>
     <div class="question-body" key="${q.key}"><h2 id="form-title">${q.title} <span class="required" aria-label="obrigatório">*</span></h2>
     <form id="question-form" novalidate><label class="sr-only" for="answer">${q.label}</label>${fieldMarkup(q)}${q.help ? `<p class="field-help">${q.help}</p>` : ''}<p class="field-error" id="field-error" role="alert">${esc(error)}</p>
-    <div class="actions"><button type="button" class="back" ${step === 0 ? 'disabled' : ''}><span aria-hidden="true">←</span> Voltar</button><button type="submit" class="next" ${busy ? 'disabled' : ''}>${busy ? 'Enviando...' : step === 7 ? 'Enviar' : 'Continuar'} ${busy ? '' : '<span aria-hidden="true">→</span>'}</button></div></form></div>`;
+    <div class="actions"><button type="button" class="back" ${step === 0 ? 'disabled' : ''}><span aria-hidden="true">←</span> Voltar</button><button type="submit" class="next" ${busy ? 'disabled' : ''}>${busy ? 'Enviando...' : step === questions.length - 1 ? 'Enviar' : 'Continuar'} ${busy ? '' : '<span aria-hidden="true">→</span>'}</button></div></form></div>`;
   const form = app.querySelector('form');
   const field = app.querySelector('#answer');
   field.addEventListener('input', () => { answers[q.key] = field.value; save(); if (error) { error = ''; app.querySelector('.field-error').textContent = ''; field.removeAttribute('aria-invalid'); } });
@@ -46,7 +46,7 @@ async function handleSubmit(event) {
   if (busy) return;
   busy = true; render();
   try {
-    const response = await fetch('/api/submit', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...answers, consent: true, startedAt }) });
+    const response = await fetch('/api/submit', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...answers, startedAt }) });
     const result = await response.json().catch(() => ({}));
     if (!response.ok) throw new Error(result.error || 'Não foi possível enviar agora. Tente novamente.');
     sessionStorage.removeItem('devgps-draft');

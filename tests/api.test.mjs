@@ -2,15 +2,15 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import handler from '../api/submit.js';
 
-const valid = { name: 'Pessoa Teste', phone: '(11) 99999-8888', email: 'pessoa@example.com', age: '25', platform: 'Instagram', student: 'Sim, sou aluno do Dev GPS', income: 'R$ 2.500', obstacle: 'Preciso de clientes', consent: true };
+const valid = { name: 'Pessoa Teste', phone: '(11) 99999-8888', email: 'pessoa@example.com', age: '25', platform: 'Instagram', income: 'R$ 2.500', obstacle: 'Preciso de clientes' };
 const call = async body => {
   const response = { status(code) { this.code = code; return this; }, json(data) { this.data = data; return this; } };
   await handler({ method: 'POST', body }, response);
   return response;
 };
 
-test('API exige consentimento e respostas válidas', async () => {
-  assert.equal((await call({ ...valid, consent: false })).code, 400);
+test('API exige respostas válidas', async () => {
+  assert.equal((await call({ ...valid, income: '' })).code, 400);
   assert.equal((await call({ ...valid, email: 'errado' })).code, 400);
   assert.equal((await call('{')).code, 400);
 });

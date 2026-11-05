@@ -9,7 +9,6 @@ export default async function handler(req, res) {
   try { body = typeof req.body === 'string' ? JSON.parse(req.body || '{}') : (req.body || {}); }
   catch { return res.status(400).json({ error: 'Dados inválidos.' }); }
   if (body.website) return res.status(200).json({ ok: true });
-  if (body.consent !== true) return res.status(400).json({ error: 'Confirme a autorização de contato.' });
   for (const q of questions) {
     const problem = validateField(q.key, body[q.key]);
     if (problem) return res.status(400).json({ error: `${q.label}: ${problem}` });
@@ -22,7 +21,7 @@ export default async function handler(req, res) {
     const result = await fetch('https://api.resend.com/emails', {
       method: 'POST',
       headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ from, to: [recipient], reply_to: String(body.email).trim(), subject: `Nova solicitação de conversa — ${String(body.name).trim()}`, html: `<div style="font-family:Arial,sans-serif;max-width:680px;margin:auto;color:#102443"><h1 style="color:#174681">Nova solicitação de conversa</h1><p>Uma pessoa respondeu ao formulário Dev GPS.</p><table style="border-collapse:collapse;width:100%">${rows}</table><p style="color:#687d9c;font-size:12px">Contato autorizado no formulário.</p></div>` })
+      body: JSON.stringify({ from, to: [recipient], reply_to: String(body.email).trim(), subject: `Nova solicitação de conversa — ${String(body.name).trim()}`, html: `<div style="font-family:Arial,sans-serif;max-width:680px;margin:auto;color:#102443"><h1 style="color:#174681">Nova solicitação de conversa</h1><p>Uma pessoa respondeu ao formulário Dev GPS.</p><table style="border-collapse:collapse;width:100%">${rows}</table></div>` })
     });
     if (!result.ok) {
       console.error('Resend rejected submission:', result.status, await result.text());

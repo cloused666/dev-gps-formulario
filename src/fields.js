@@ -4,9 +4,8 @@ export const questions = [
   { key: 'email', number: '03', title: 'E o seu melhor e-mail?', label: 'E-mail', hint: 'Para que eu tenha outra forma de falar com você.', type: 'email', autocomplete: 'email', placeholder: 'voce@exemplo.com', maxLength: 254 },
   { key: 'age', number: '04', title: 'Qual é a sua idade?', label: 'Idade', hint: 'Isso me ajuda a entender seu momento atual.', type: 'number', inputmode: 'numeric', placeholder: 'Digite sua idade', min: 1, max: 120 },
   { key: 'platform', number: '05', title: 'Onde você acompanha meu conteúdo?', label: 'Plataforma', hint: 'Escolha a opção que mais combina com você.', type: 'select', options: ['Instagram', 'TikTok', 'YouTube', 'Em mais de uma plataforma'] },
-  { key: 'student', number: '06', title: 'Você é aluno do Dev GPS?', label: 'Seu vínculo com o treinamento', hint: 'Assim eu sei de onde partimos.', type: 'select', options: ['Sim, sou aluno do Dev GPS', 'Ainda não sou aluno'] },
-  { key: 'income', number: '07', title: 'Qual é a sua renda atual?', label: 'Renda atual', hint: 'Pode responder do jeito que fizer sentido para você.', type: 'text', placeholder: 'Ex.: R$ 2.500 por mês ou sem renda no momento', maxLength: 160 },
-  { key: 'obstacle', number: '08', title: 'O que mais te impede de atingir os 10 mil por mês?', label: 'Sua principal dificuldade', hint: 'Conte com suas palavras. Quero entender seu desafio.', type: 'textarea', placeholder: 'Escreva sua resposta aqui...', maxLength: 1200 },
+  { key: 'income', number: '06', title: 'Qual é a sua renda atual?', label: 'Renda atual', hint: 'Pode responder do jeito que fizer sentido para você.', type: 'text', placeholder: 'Ex.: R$ 2.500 por mês ou sem renda no momento', maxLength: 160 },
+  { key: 'obstacle', number: '07', title: 'O que mais te impede de atingir os 10 mil por mês?', label: 'Sua principal dificuldade', hint: 'Conte com suas palavras. Quero entender seu desafio.', type: 'textarea', placeholder: 'Escreva sua resposta aqui...', maxLength: 1200 },
 ];
 
 export function validateField(key, value) {

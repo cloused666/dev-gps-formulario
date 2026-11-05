@@ -1,6 +1,6 @@
 # Formulário Dev GPS
 
-Formulário de oito etapas para solicitar uma conversa com Timoteo Dev. As respostas são enviadas para `caiotimoteo9@gmail.com` por uma função da Vercel usando a API do Resend.
+Formulário de sete etapas para solicitar uma conversa com Timoteo Dev. As respostas são enviadas para `caiotimoteo9@gmail.com` por uma função da Vercel usando a API do Resend.
 
 ## Rodar localmente
 
