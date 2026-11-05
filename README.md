@@ -21,7 +21,7 @@ O Vite mostra a interface local e usa a chave de teste oficial do Turnstile. Par
 
 Não coloque `RESEND_API_KEY` nem `TURNSTILE_SECRET_KEY` no repositório ou em variáveis `VITE_`. Não use chaves de teste do Turnstile em produção. O destinatário fica definido somente na função de servidor. O endereço usado como remetente precisa estar autorizado no Resend. Sem as chaves de produção, a função responde com erro e não tenta enviar e-mail.
 
-O formulário inclui validação no servidor, limite de tamanho da requisição, campo antispam invisível, token Turnstile validado pelo Cloudflare, identificador para evitar e-mails duplicados em novas tentativas, respostas sem cache e cabeçalhos de segurança. A página de privacidade informa quais dados são coletados e como solicitar acesso ou exclusão. O responsável pelo projeto deve revisar esse aviso e gerenciar a retenção das mensagens recebidas.
+O formulário inclui validação no servidor, limite de tamanho da requisição, campo antispam invisível, token Turnstile validado pelo Cloudflare, identificador para evitar e-mails duplicados em novas tentativas, respostas sem cache e cabeçalhos de segurança. A página de privacidade informa quais dados são coletados. O responsável pelo projeto deve revisar esse aviso e gerenciar a retenção das mensagens recebidas.
 
 A fonte DM Sans é servida pelo próprio site. Sua licença SIL OFL está em `public/dm-sans-license.txt`.
 
