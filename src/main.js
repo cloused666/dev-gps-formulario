@@ -20,12 +20,12 @@ function fieldMarkup(q) {
 
 function render() {
   const q = questions[step];
-  app.innerHTML = `<div class="progress-meta"><span>ETAPA ${q.number} <span class="meta-of">/ 08</span></span><span>${Math.round((step + 1) / questions.length * 100)}% CONCLUÍDO</span></div>
+  app.innerHTML = `<div class="card-title">FORMULÁRIO DEV GPS</div>
+    <div class="progress-meta"><span class="sr-only">Progresso</span><span>${step + 1} / ${questions.length}</span></div>
     <div class="progress" role="progressbar" aria-label="Progresso do formulário" aria-valuemin="0" aria-valuemax="8" aria-valuenow="${step + 1}"><span style="width:${(step + 1) / questions.length * 100}%"></span></div>
-    <div class="question-body" key="${q.key}"><span class="question-number">${q.number} <span>—</span> 08</span><h2 id="form-title">${q.title}</h2><p class="question-hint" id="field-hint">${q.hint}</p>
-    <form id="question-form" novalidate><label for="answer">${q.label} <span class="required" aria-label="obrigatório">*</span></label>${fieldMarkup(q)}${q.help ? `<p class="field-help">${q.help}</p>` : ''}<p class="field-error" id="field-error" role="alert">${esc(error)}</p>
-    ${step === 7 ? '<label class="consent"><input id="consent" type="checkbox" required /><span>Concordo em receber contato do Timoteo Dev sobre esta conversa.</span></label>' : ''}
-    <div class="actions"><button type="button" class="back" ${step === 0 ? 'disabled' : ''}><span aria-hidden="true">←</span> Voltar</button><button type="submit" class="next" ${busy ? 'disabled' : ''}>${busy ? 'Enviando...' : step === 7 ? 'Enviar respostas' : 'Continuar'} ${busy ? '' : '<span aria-hidden="true">↗</span>'}</button></div></form></div>`;
+    <div class="question-body" key="${q.key}"><h2 id="form-title">${q.title} <span class="required" aria-label="obrigatório">*</span></h2>
+    <form id="question-form" novalidate><label class="sr-only" for="answer">${q.label}</label>${fieldMarkup(q)}${q.help ? `<p class="field-help">${q.help}</p>` : ''}<p class="field-error" id="field-error" role="alert">${esc(error)}</p>
+    <div class="actions"><button type="button" class="back" ${step === 0 ? 'disabled' : ''}><span aria-hidden="true">←</span> Voltar</button><button type="submit" class="next" ${busy ? 'disabled' : ''}>${busy ? 'Enviando...' : step === 7 ? 'Enviar' : 'Continuar'} ${busy ? '' : '<span aria-hidden="true">→</span>'}</button></div></form></div>`;
   const form = app.querySelector('form');
   const field = app.querySelector('#answer');
   field.addEventListener('input', () => { answers[q.key] = field.value; save(); if (error) { error = ''; app.querySelector('.field-error').textContent = ''; field.removeAttribute('aria-invalid'); } });
@@ -41,7 +41,6 @@ async function handleSubmit(event) {
   answers[q.key] = field.value.trim();
   save();
   error = validateField(q.key, answers[q.key]);
-  if (!error && step === 7 && !app.querySelector('#consent').checked) error = 'Confirme que podemos entrar em contato com você.';
   if (error) { app.querySelector('.field-error').textContent = error; field.setAttribute('aria-invalid', 'true'); field.focus(); return; }
   if (step < questions.length - 1) { step++; render(); app.querySelector('#answer').focus(); return; }
   if (busy) return;
