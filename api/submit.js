@@ -1,4 +1,7 @@
 import { questions, validateField } from '../src/fields.js';
+import { validOrigin, createSubmissionLimiter } from '../server/security.js';
+
+const limitSubmission = createSubmissionLimiter();
 
 const recipient = 'caiotimoteo9@gmail.com';
 const maxBodyBytes = 8192;
@@ -19,6 +22,8 @@ export default async function handler(req, res) {
     res.setHeader?.('Allow', 'POST');
     return reply(405, 'Método não permitido.');
   }
+
+  if (!validOrigin(req.headers)) return reply(403, 'Origem inválida.');
 
   const contentType = req.headers?.['content-type'] || '';
   if (!/^application\/json(?:\s*;|$)/i.test(contentType)) return reply(415, 'Envie os dados em JSON.');
@@ -50,16 +55,14 @@ export default async function handler(req, res) {
   const turnstileSecret = process.env.TURNSTILE_SECRET_KEY;
   if (!apiKey || !from || !turnstileSecret) return reply(503, 'O envio ainda não foi configurado. Tente novamente mais tarde.');
   const usingTestSecret = turnstileTestSecrets.has(turnstileSecret);
-  if (process.env.VERCEL_ENV === 'production' && usingTestSecret) return reply(503, 'A verificação de segurança ainda não foi configurada.');
+  if (process.env.VERCEL_ENV && process.env.VERCEL_ENV !== 'development' && usingTestSecret) return reply(503, 'A verificação de segurança ainda não foi configurada.');
 
   const host = req.headers?.host?.split(':')[0]?.toLowerCase();
   if (!host) return reply(400, 'Origem inválida.');
-  if (req.headers?.origin) {
-    try {
-      if (new URL(req.headers.origin).host.toLowerCase() !== req.headers.host.toLowerCase()) return reply(403, 'Origem inválida.');
-    } catch {
-      return reply(403, 'Origem inválida.');
-    }
+  const rate = limitSubmission(req);
+  if (!rate.allowed) {
+    res.setHeader?.('Retry-After', String(rate.retryAfter));
+    return reply(429, 'Muitas tentativas. Aguarde um minuto antes de tentar novamente.');
   }
 
   try {
