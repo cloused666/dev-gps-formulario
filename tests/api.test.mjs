@@ -15,7 +15,7 @@ const valid = {
   turnstileToken: 'valid-token',
 };
 
-async function call(body, headers = {}) {
+async function call(body, headers = {}, method = 'POST') {
   const response = {
     headers: {},
     setHeader(key, value) { this.headers[key] = value; },
@@ -23,7 +23,7 @@ async function call(body, headers = {}) {
     json(data) { this.data = data; return this; },
   };
   await handler({
-    method: 'POST',
+    method,
     body,
     headers: { host: 'example.com', origin: 'https://example.com', 'content-type': 'application/json', ...headers },
   }, response);
@@ -40,7 +40,68 @@ test('API rejeita entradas inválidas antes de chamar serviços externos', async
   assert.equal((await call('{')).code, 400);
   assert.equal((await call({ ...valid, obstacle: 'x'.repeat(9000) })).code, 413);
   assert.equal((await call(valid, { 'content-type': 'text/plain' })).code, 415);
-  assert.equal((await call(valid, { origin: 'https://outro.example' })).code, 503);
+  assert.equal((await call(valid, { origin: 'https://outro.example' })).code, 403);
+});
+
+test('API rejeita métodos e origens ausentes sem chamar serviços', async () => {
+  assert.equal((await call(valid, {}, 'GET')).code, 405);
+  assert.equal((await call(valid, { origin: undefined })).code, 403);
+  assert.equal((await call(valid, { origin: 'null' })).code, 403);
+});
+
+test('API responde 429 antes de chamar Cloudflare ou Resend quando excede limite local', async () => {
+  const names = ['VERCEL', 'RESEND_API_KEY', 'RESEND_FROM_EMAIL', 'TURNSTILE_SECRET_KEY'];
+  const previous = Object.fromEntries(names.map(name => [name, process.env[name]]));
+  const oldFetch = globalThis.fetch;
+  let requests = 0;
+  process.env.VERCEL = '1';
+  process.env.RESEND_API_KEY = 'test-key';
+  process.env.RESEND_FROM_EMAIL = 'Teste <formulario@example.com>';
+  process.env.TURNSTILE_SECRET_KEY = 'test-secret';
+  globalThis.fetch = async () => { requests++; return { ok: true, json: async () => ({ success: false }) }; };
+  try {
+    for (let i = 0; i < 10; i++) assert.equal((await call(valid, { 'x-vercel-forwarded-for': '203.0.113.77' })).code, 403);
+    const response = await call(valid, { 'x-vercel-forwarded-for': '203.0.113.77' });
+    assert.equal(response.code, 429);
+    assert.ok(Number(response.headers['Retry-After']) > 0);
+    assert.equal(requests, 10);
+  } finally {
+    globalThis.fetch = oldFetch;
+    for (const name of names) if (previous[name] === undefined) delete process.env[name]; else process.env[name] = previous[name];
+  }
+});
+
+test('API falha fechada se token é de outro hostname/ação, serviço falha ou chave é de teste em produção', async () => {
+  const oldEnv = { ...process.env };
+  const oldFetch = globalThis.fetch;
+  process.env.RESEND_API_KEY = 'test-key';
+  process.env.RESEND_FROM_EMAIL = 'Teste <formulario@example.com>';
+  process.env.TURNSTILE_SECRET_KEY = 'test-secret';
+  let calls = [];
+  let verification = { success: true, hostname: 'evil.example', action: 'dev_gps_form' };
+  globalThis.fetch = async (url) => { calls.push(url); return url.includes('siteverify') ? { ok: true, json: async () => verification } : { ok: false, status: 500 }; };
+  try {
+    assert.equal((await call(valid)).code, 403);
+    assert.equal(calls.length, 1);
+    verification = { success: true, hostname: 'example.com', action: 'another_form' };
+    assert.equal((await call(valid)).code, 403);
+    assert.equal(calls.length, 2);
+    verification = { success: true, hostname: 'example.com', action: 'dev_gps_form' };
+    assert.equal((await call(valid)).code, 502);
+    assert.equal(calls.length, 4);
+    process.env.VERCEL_ENV = 'production';
+    process.env.TURNSTILE_SECRET_KEY = '1x0000000000000000000000000000000AA';
+    assert.equal((await call(valid, { host: 'formulario.caiotimoteo.com.br', origin: 'https://formulario.caiotimoteo.com.br' })).code, 503);
+    assert.equal(calls.length, 4);
+    delete process.env.RESEND_API_KEY;
+    delete process.env.VERCEL_ENV;
+    assert.equal((await call(valid)).code, 503);
+  } finally {
+    globalThis.fetch = oldFetch;
+    for (const name of ['RESEND_API_KEY', 'RESEND_FROM_EMAIL', 'TURNSTILE_SECRET_KEY', 'VERCEL_ENV']) {
+      if (oldEnv[name] === undefined) delete process.env[name]; else process.env[name] = oldEnv[name];
+    }
+  }
 });
 
 test('API valida Turnstile, envia e-mail escapado e evita duplicatas', async () => {
